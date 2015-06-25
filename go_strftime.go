@@ -8,11 +8,26 @@ import(
 
 func Strftime(layout string, t time.Time) string {
 	// Implemented most useful of http://www.cplusplus.com/reference/ctime/strftime/
+	// Skipped: %U, %W (not ISO week number) and modifiers E and O
 	// How to use : fmt.Println( Strftime("%Y-%m-%d", time.Now()) )
-
+	
+	// Timezone and UTC offset
+	time_zone, utc_offset := t.Zone()
+	minutes_offset := utc_offset/60
+	h := minutes_offset/60
+	m := minutes_offset%60
+	sign := "+"
+	if utc_offset<0{
+		sign = "-"
+	}
+	iso_offset := fmt.Sprintf("%v%v%02v", sign, h, m)
+	layout = strings.Replace(layout, "%Z", time_zone, 100)
+	layout = strings.Replace(layout, "%z", iso_offset, 100)
 	// mm/dd/yy
 	layout = strings.Replace(layout, "%D", "%m/%d/%y" , 100)	
 	layout = strings.Replace(layout, "%x", "%m/%d/%y" , 100)
+	// Tue Jan 23 12:23:00 2015 	
+	layout = strings.Replace(layout, "%c", "%a %b %e %H:%M:%S %Y" , 100)
 	// YYYY-mm-dd
 	layout = strings.Replace(layout, "%F", "%Y-%m-%d" , 100)
 	// HH:MM:SS AM/PM
@@ -26,17 +41,32 @@ func Strftime(layout string, t time.Time) string {
 	layout = strings.Replace(layout, "%C", fmt.Sprintf("%v", int(t.Year()/100)), 100)
 	// Day of year
 	layout = strings.Replace(layout, "%j", fmt.Sprintf("%03v", t.YearDay()), 100)
+	// Week based year
+	week_based_year, week_num := t.ISOWeek()
+	layout = strings.Replace(layout, "%G", fmt.Sprintf("%04v", week_based_year), 100)
+	layout = strings.Replace(layout, "%g", fmt.Sprintf("%04v", week_based_year)[2:4], 100)
+	// ISO 8601 week number
+	layout = strings.Replace(layout, "%V", fmt.Sprintf("%v", week_num), 100)	
 	// Year
 	layout = strings.Replace(layout, "%Y", fmt.Sprintf("%04v", t.Year()), 100)
 	layout = strings.Replace(layout, "%y", fmt.Sprintf("%04v", t.Year())[2:4], 100)
 	// Month
 	layout = strings.Replace(layout, "%m", fmt.Sprintf("%02v", int(t.Month())), 100)
 	layout = strings.Replace(layout, "%B", t.Month().String(), 100)
+	switch t.Month(){
+		case time.June, time.July, time.September:
+			layout = strings.Replace(layout, "%b", t.Month().String()[:4], 100)
+			layout = strings.Replace(layout, "%h", t.Month().String()[:4], 100)
+		default:
+			layout = strings.Replace(layout, "%b", t.Month().String()[:3], 100)
+			layout = strings.Replace(layout, "%h", t.Month().String()[:3], 100)
+	}	
 	// Day	
 	layout = strings.Replace(layout, "%d", fmt.Sprintf("%02v", t.Day()), 100)
 	layout = strings.Replace(layout, "%e", fmt.Sprintf("%v", t.Day()), 100)
 	// Weekday
 	layout = strings.Replace(layout, "%A", t.Weekday().String(), 100)
+	layout = strings.Replace(layout, "%a", t.Weekday().String()[:3], 100)
 	layout = strings.Replace(layout, "%u", fmt.Sprintf("%v", int(t.Weekday())), 100)
 	layout = strings.Replace(layout, "%w", fmt.Sprintf("%v", int(t.Weekday())-1 ), 100)
 	// Hour
