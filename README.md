@@ -1,4 +1,4 @@
-###C-like strftime on Golang
+### C-like strftime on Golang
 
 Implemented most [useful patterns](http://www.cplusplus.com/reference/ctime/strftime/).
 Skipped `%U`, `%W` (not ISO week number) and modifiers `E` and `O`.
